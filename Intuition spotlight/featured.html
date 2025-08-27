@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured - Intuition</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --surface: #ffffff;
+            --surface-dark: #1f2937;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --text-dark: #ffffff;
+            --border: #e5e7eb;
+            --border-dark: #374151;
+            --background: #f9fafb;
+            --background-dark: #111827;
+            --muted: #f3f4f6;
+            --muted-dark: #1f2937;
+        }
+
+        [data-theme="dark"] {
+            --surface: var(--surface-dark);
+            --text: var(--text-dark);
+            --text-light: #9ca3af;
+            --border: var(--border-dark);
+            --background: var(--background-dark);
+            --muted: var(--muted-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: var(--muted);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            background: var(--surface);
+            color: var(--text);
+            width: 250px;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--muted);
+        }
+
+        .connect-wallet-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .connect-wallet-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filters {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .filter-select, .filter-input {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            background: var(--surface);
+            color: var(--text);
+            min-width: 150px;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .featured-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .featured-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .card-meta {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card-description {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            background: var(--muted);
+            color: var(--text);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+        }
+
+        .card-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .interaction-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--muted);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .empty-state-description {
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .main {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-select, .filter-input {
+                min-width: auto;
+            }
+
+            .featured-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+
+            .interaction-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="homepage.html" class="logo">Intuition</a>
+            <nav class="nav">
+                <a href="homepage.html" class="nav-link">Home</a>
+                <a href="submit.html" class="nav-link">Submit</a>
+                <a href="curate.html" class="nav-link">Curate</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <a href="featured.html" class="nav-link active">Featured</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+            </nav>
+            <div class="header-actions">
+                <input type="text" class="search-box" placeholder="Search featured content...">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+                <button class="connect-wallet-btn">🔗 Connect Wallet</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="page-header">
+            <h1 class="page-title">Featured Content</h1>
+            <p class="page-subtitle">Discover the best community contributions that have been approved and featured by our curators</p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="featuredCount">0</div>
+                <div class="stat-label">Featured Posts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="featuredApprovalRate">0%</div>
+                <div class="stat-label">Approval Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="featuredTotalVotes">0</div>
+                <div class="stat-label">Total Votes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="featuredCurators">0</div>
+                <div class="stat-label">Curators</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Content Type</label>
+                    <select class="filter-select" id="contentTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="research">Research</option>
+                        <option value="article">Article</option>
+                        <option value="video">Video</option>
+                        <option value="art">Art</option>
+                        <option value="memes">Memes</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="recent">Most Recent</option>
+                        <option value="votes">Most Voted</option>
+                        <option value="quality">Highest Quality</option>
+                        <option value="impact">Most Impactful</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Time Period</label>
+                    <select class="filter-select" id="timeFilter">
+                        <option value="all">All Time</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" class="filter-input" id="searchFilter" placeholder="Search featured content...">
+                </div>
+                <button class="filter-btn" onclick="applyFilters()">Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- Featured Content Grid -->
+        <div class="featured-grid" id="featuredGrid">
+            <!-- Featured posts will be dynamically generated -->
+        </div>
+    </main>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.querySelector('.theme-toggle');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.querySelector('.theme-toggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+            }
+        }
+
+        // Dynamic featured posts loading
+        let featuredPosts = [];
+
+        // Load featured posts from localStorage
+        function loadFeaturedPosts() {
+            try {
+                const savedContributions = localStorage.getItem('myContributions');
+                if (savedContributions) {
+                    const contributions = JSON.parse(savedContributions);
+                    // Filter for approved contributions
+                    featuredPosts = contributions
+                        .filter(contribution => contribution.status === 'Approved')
+                        .map(contribution => ({
+                            id: contribution.id,
+                            title: contribution.title,
+                            author: contribution.author || 'Anonymous',
+                            description: contribution.description,
+                            contentType: contribution.contentType,
+                            tags: contribution.tags || [],
+                            votes: 0,
+                            quality: 8.5, // Default quality score
+                            impact: "Medium", // Default impact
+                            timestamp: getTimeAgo(contribution.submissionDate),
+                            curator: "Community Curator",
+                            approvalDate: contribution.approvalDate || contribution.submissionDate
+                        }));
+                }
+                renderFeaturedPosts(featuredPosts);
+                updateFeaturedStats();
+            } catch (e) {
+                console.warn('Could not load featured posts from localStorage:', e);
+                featuredPosts = [];
+                renderFeaturedPosts(featuredPosts);
+                updateFeaturedStats();
+            }
+        }
+
+        // Compute and update Featured page stat cards
+        function updateFeaturedStats() {
+            let totalContributions = 0;
+            let approvedCount = 0;
+            let totalVotes = 0;
+
+            try {
+                const raw = localStorage.getItem('myContributions');
+                const contributions = raw ? JSON.parse(raw) : [];
+                totalContributions = contributions.length;
+                approvedCount = contributions.filter(c => c.status === 'Approved').length;
+
+                // If votes is an object (up/down), compute net; if number, use directly
+                totalVotes = contributions.reduce((sum, c) => {
+                    const v = c.votes;
+                    if (!v) return sum;
+                    if (typeof v === 'number') return sum + v;
+                    if (typeof v === 'object') {
+                        const up = Number(v.up || 0);
+                        const down = Number(v.down || 0);
+                        return sum + Math.max(0, up - down);
+                    }
+                    return sum;
+                }, 0);
+            } catch (_) {}
+
+            // Curators count: 1 if local user approved, else 0 (placeholder until backend)
+            let curatorsCount = 0;
+            try {
+                const curatorStatus = localStorage.getItem('curatorStatus');
+                if (curatorStatus) {
+                    const s = JSON.parse(curatorStatus);
+                    if (s.status === 'approved' || s.status === 'Approved') curatorsCount = 1;
+                }
+            } catch (_) {}
+
+            const approvalRate = totalContributions === 0 ? 0 : Math.round((approvedCount / totalContributions) * 100);
+
+            const elFeatured = document.getElementById('featuredCount');
+            const elRate = document.getElementById('featuredApprovalRate');
+            const elVotes = document.getElementById('featuredTotalVotes');
+            const elCurators = document.getElementById('featuredCurators');
+
+            if (elFeatured) elFeatured.textContent = String(approvedCount);
+            if (elRate) elRate.textContent = `${approvalRate}%`;
+            if (elVotes) elVotes.textContent = String(totalVotes);
+            if (elCurators) elCurators.textContent = String(curatorsCount);
+        }
+
+        // Helper function to get time ago
+        function getTimeAgo(dateString) {
+            const now = new Date();
+            const submissionDate = new Date(dateString);
+            const diffInMs = now - submissionDate;
+            const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+            const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+            const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+
+            if (diffInDays > 0) {
+                return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`;
+            } else if (diffInHours > 0) {
+                return diffInHours === 1 ? '1 hour ago' : `${diffInHours} hours ago`;
+            } else if (diffInMinutes > 0) {
+                return diffInMinutes === 1 ? '1 minute ago' : `${diffInMinutes} minutes ago`;
+            } else {
+                return 'Just now';
+            }
+        }
+
+        // Render featured posts
+        function renderFeaturedPosts(posts = featuredPosts) {
+            const grid = document.getElementById('featuredGrid');
+            
+            if (posts.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <h3 class="empty-state-title">No Featured Content Found</h3>
+                        <p class="empty-state-description">Try adjusting your filters or check back later for new featured content.</p>
+                        <button class="btn btn-primary" onclick="resetFilters()">Reset Filters</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = posts.map(post => `
+                <div class="featured-card">
+                    <div class="card-header">
+                        <div class="card-badge">${post.contentType.charAt(0).toUpperCase() + post.contentType.slice(1)}</div>
+                        <h3 class="card-title">${post.title}</h3>
+                        <div class="card-meta">
+                            by ${post.author} • ${post.timestamp} • Curated by ${post.curator}
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-description">${post.description}</p>
+                        <div class="card-tags">
+                            ${post.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <span>👍</span>
+                                <span>${post.votes} votes</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>⭐</span>
+                                <span>${post.quality}/10</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>🎯</span>
+                                <span>${post.impact} Impact</span>
+                            </div>
+                        </div>
+                        <div class="interaction-buttons">
+                            <button class="btn btn-primary" onclick="viewPost(${post.id})">View Full Post</button>
+                            <button class="btn btn-outline" onclick="sharePost(${post.id})">Share</button>
+                            <button class="btn btn-secondary" onclick="votePost(${post.id})">Vote</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter functionality
+        function applyFilters() {
+            const contentType = document.getElementById('contentTypeFilter').value;
+            const sortBy = document.getElementById('sortFilter').value;
+            const timeFilter = document.getElementById('timeFilter').value;
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+
+            let filtered = [...featuredPosts];
+
+            // Content type filter
+            if (contentType) {
+                filtered = filtered.filter(post => post.contentType === contentType);
+            }
+
+            // Search filter
+            if (search) {
+                filtered = filtered.filter(post =>
+                    post.title.toLowerCase().includes(search) ||
+                    post.description.toLowerCase().includes(search) ||
+                    post.tags.some(tag => tag.toLowerCase().includes(search)) ||
+                    post.curator.toLowerCase().includes(search)
+                );
+            }
+
+            // Time filter
+            if (timeFilter !== 'all') {
+                const now = new Date();
+                const cutoff = new Date();
+                
+                switch (timeFilter) {
+                    case 'week':
+                        cutoff.setDate(now.getDate() - 7);
+                        break;
+                    case 'month':
+                        cutoff.setMonth(now.getMonth() - 1);
+                        break;
+                    case 'quarter':
+                        cutoff.setMonth(now.getMonth() - 3);
+                        break;
+                }
+                
+                filtered = filtered.filter(post => new Date(post.approvalDate) >= cutoff);
+            }
+
+            // Sort
+            switch (sortBy) {
+                case 'recent':
+                    filtered.sort((a, b) => new Date(b.approvalDate) - new Date(a.approvalDate));
+                    break;
+                case 'votes':
+                    filtered.sort((a, b) => b.votes - a.votes);
+                    break;
+                case 'quality':
+                    filtered.sort((a, b) => b.quality - a.quality);
+                    break;
+                case 'impact':
+                    const impactOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                    filtered.sort((a, b) => impactOrder[b.impact] - impactOrder[a.impact]);
+                    break;
+            }
+
+            renderFeaturedPosts(filtered);
+        }
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('contentTypeFilter').value = '';
+            document.getElementById('sortFilter').value = 'recent';
+            document.getElementById('timeFilter').value = 'all';
+            document.getElementById('searchFilter').value = '';
+            renderFeaturedPosts();
+        }
+
+        // Post interaction functions
+        function viewPost(postId) {
+            const post = featuredPosts.find(p => p.id === postId);
+            if (post) {
+                alert(`Viewing: ${post.title}\n\nThis would navigate to the full post view.`);
+            }
+        }
+
+        function sharePost(postId) {
+            const post = featuredPosts.find(p => p.id === postId);
+            if (post && navigator.share) {
+                navigator.share({
+                    title: post.title,
+                    text: post.description,
+                    url: window.location.href
+                });
+            } else {
+                const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(post?.title || '')}&url=${encodeURIComponent(window.location.href)}`;
+                window.open(url, '_blank');
+            }
+        }
+
+        function votePost(postId) {
+            const post = featuredPosts.find(p => p.id === postId);
+            if (post) {
+                post.votes++;
+                renderFeaturedPosts();
+                alert(`Vote recorded for: ${post.title}`);
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            loadFeaturedPosts();
+            initializeConnectWallet();
+            
+            // Add event listeners for real-time filtering
+            document.getElementById('contentTypeFilter').addEventListener('change', applyFilters);
+            document.getElementById('sortFilter').addEventListener('change', applyFilters);
+            document.getElementById('timeFilter').addEventListener('change', applyFilters);
+            document.getElementById('searchFilter').addEventListener('input', applyFilters);
+        });
+
+        // Listen for changes in localStorage (when contributions are approved/rejected)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'myContributions') {
+                loadFeaturedPosts();
+                updateFeaturedStats();
+            }
+            if (e.key === 'curatorStatus') {
+                updateFeaturedStats();
+            }
+        });
+
+        // Connect Wallet Functionality
+        function initializeConnectWallet() {
+            const connectWalletBtn = document.querySelector('.connect-wallet-btn');
+            if (connectWalletBtn) {
+                connectWalletBtn.addEventListener('click', function() {
+                    alert('Wallet connection would be implemented here');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

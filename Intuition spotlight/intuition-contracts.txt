@@ -1,0 +1,845 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+
+/**
+ * @title IntuitionContributions
+ * @dev ERC721 contract for minting contribution NFTs
+ * Each NFT represents a verifiable claim/contribution to the Intuition knowledge graph
+ */
+contract IntuitionContributions is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
+    using Counters for Counters.Counter;
+    
+    Counters.Counter private _tokenIdCounter;
+    
+    struct Contribution {
+        uint256 tokenId;
+        address creator;
+        string contentType; // "art", "essay", "research", "meme", "video", "other"
+        string claimId; // Link to Intuition Knowledge Object/Claim
+        string ipfsHash; // Content stored on IPFS
+        uint256 timestamp;
+        uint256 upvotes;
+        uint256 downvotes;
+        bool featured;
+        mapping(address => bool) hasVoted;
+        mapping(address => bool) voteDirection; // true = upvote, false = downvote
+    }
+    
+    mapping(uint256 => Contribution) public contributions;
+    mapping(address => uint256[]) public userContributions;
+    mapping(string => bool) public claimExists;
+    
+    // Events
+    event ContributionMinted(
+        uint256 indexed tokenId,
+        address indexed creator,
+        string contentType,
+        string claimId,
+        string ipfsHash
+    );
+    
+    event ContributionVoted(
+        uint256 indexed tokenId,
+        address indexed voter,
+        bool upvote
+    );
+    
+    event ContributionFeatured(
+        uint256 indexed tokenId,
+        address indexed featuredBy
+    );
+    
+    constructor() ERC721("IntuitionContributions", "INTC") {}
+    
+    /**
+     * @dev Mint a new contribution NFT
+     * @param to Address to mint the NFT to
+     * @param contentType Type of content being contributed
+     * @param claimId Link to Intuition Knowledge Object/Claim
+     * @param ipfsHash IPFS hash of the content
+     * @param tokenURI Metadata URI for the NFT
+     */
+    function mintContribution(
+        address to,
+        string memory contentType,
+        string memory claimId,
+        string memory ipfsHash,
+        string memory tokenURI
+    ) public nonReentrant returns (uint256) {
+        require(bytes(contentType).length > 0, "Content type cannot be empty");
+        require(bytes(claimId).length > 0, "Claim ID cannot be empty");
+        require(bytes(ipfsHash).length > 0, "IPFS hash cannot be empty");
+        
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, tokenURI);
+        
+        // Initialize contribution data
+        Contribution storage contribution = contributions[tokenId];
+        contribution.tokenId = tokenId;
+        contribution.creator = to;
+        contribution.contentType = contentType;
+        contribution.claimId = claimId;
+        contribution.ipfsHash = ipfsHash;
+        contribution.timestamp = block.timestamp;
+        contribution.upvotes = 0;
+        contribution.downvotes = 0;
+        contribution.featured = false;
+        
+        // Track user contributions
+        userContributions[to].push(tokenId);
+        claimExists[claimId] = true;
+        
+        emit ContributionMinted(tokenId, to, contentType, claimId, ipfsHash);
+        
+        return tokenId;
+    }
+    
+    /**
+     * @dev Vote on a contribution
+     * @param tokenId ID of the contribution to vote on
+     * @param upvote True for upvote, false for downvote
+     */
+    function voteContribution(uint256 tokenId, bool upvote) public {
+        require(_exists(tokenId), "Contribution does not exist");
+        require(!contributions[tokenId].hasVoted[msg.sender], "Already voted on this contribution");
+        
+        Contribution storage contribution = contributions[tokenId];
+        contribution.hasVoted[msg.sender] = true;
+        contribution.voteDirection[msg.sender] = upvote;
+        
+        if (upvote) {
+            contribution.upvotes++;
+        } else {
+            contribution.downvotes++;
+        }
+        
+        emit ContributionVoted(tokenId, msg.sender, upvote);
+    }
+    
+    /**
+     * @dev Feature a contribution (only owner or high-reputation users)
+     * @param tokenId ID of the contribution to feature
+     */
+    function featureContribution(uint256 tokenId) public {
+        require(_exists(tokenId), "Contribution does not exist");
+        require(
+            msg.sender == owner() || getUserTrustScore(msg.sender) >= 100,
+            "Not authorized to feature contributions"
+        );
+        
+        contributions[tokenId].featured = true;
+        
+        emit ContributionFeatured(tokenId, msg.sender);
+    }
+    
+    /**
+     * @dev Get contribution details
+     * @param tokenId ID of the contribution
+     */
+    function getContribution(uint256 tokenId) public view returns (
+        address creator,
+        string memory contentType,
+        string memory claimId,
+        string memory ipfsHash,
+        uint256 timestamp,
+        uint256 upvotes,
+        uint256 downvotes,
+        bool featured
+    ) {
+        require(_exists(tokenId), "Contribution does not exist");
+        
+        Contribution storage contribution = contributions[tokenId];
+        return (
+            contribution.creator,
+            contribution.contentType,
+            contribution.claimId,
+            contribution.ipfsHash,
+            contribution.timestamp,
+            contribution.upvotes,
+            contribution.downvotes,
+            contribution.featured
+        );
+    }
+    
+    /**
+     * @dev Get user's contributions
+     * @param user Address of the user
+     */
+    function getUserContributions(address user) public view returns (uint256[] memory) {
+        return userContributions[user];
+    }
+    
+    /**
+     * @dev Calculate user's trust score based on their contributions
+     * @param user Address of the user
+     */
+    function getUserTrustScore(address user) public view returns (uint256) {
+        uint256[] memory tokens = userContributions[user];
+        uint256 score = 0;
+        
+        for (uint256 i = 0; i < tokens.length; i++) {
+            Contribution storage contribution = contributions[tokens[i]];
+            score += contribution.upvotes;
+            if (contribution.downvotes > 0) {
+                score = score > contribution.downvotes ? score - contribution.downvotes : 0;
+            }
+            if (contribution.featured) {
+                score += 10; // Bonus for featured contributions
+            }
+        }
+        
+        return score;
+    }
+    
+    /**
+     * @dev Get total number of contributions
+     */
+    function totalContributions() public view returns (uint256) {
+        return _tokenIdCounter.current();
+    }
+    
+    // Override required by Solidity
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+    
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+    
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721URIStorage) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+}
+
+/**
+ * @title IntuitionBadges
+ * @dev ERC1155 contract for community badges and achievements
+ * Badges are earned through community participation and recognition
+ */
+contract IntuitionBadges is ERC1155, Ownable {
+    using Counters for Counters.Counter;
+    
+    Counters.Counter private _badgeIdCounter;
+    
+    struct Badge {
+        uint256 badgeId;
+        string name;
+        string description;
+        string imageURI;
+        uint256 totalSupply;
+        bool soulbound; // Cannot be transferred if true
+        mapping(address => bool) holders;
+    }
+    
+    mapping(uint256 => Badge) public badges;
+    mapping(address => uint256[]) public userBadges;
+    
+    // Predefined badge types
+    uint256 public constant FIRST_CONTRIBUTION_BADGE = 1;
+    uint256 public constant POPULAR_CREATOR_BADGE = 2;
+    uint256 public constant TRUSTED_MEMBER_BADGE = 3;
+    uint256 public constant COMMUNITY_BUILDER_BADGE = 4;
+    uint256 public constant FEATURED_CONTRIBUTOR_BADGE = 5;
+    
+    IntuitionContributions public contributionsContract;
+    
+    event BadgeAwarded(uint256 indexed badgeId, address indexed recipient, string badgeName);
+    
+    constructor(address _contributionsContract) ERC1155("https://api.intuition.community/badges/{id}") {
+        contributionsContract = IntuitionContributions(_contributionsContract);
+        _initializeBadges();
+    }
+    
+    /**
+     * @dev Initialize predefined badges
+     */
+    function _initializeBadges() internal {
+        _createBadge(
+            FIRST_CONTRIBUTION_BADGE,
+            "First Contribution",
+            "Awarded for making your first contribution to the Intuition community",
+            true
+        );
+        
+        _createBadge(
+            POPULAR_CREATOR_BADGE,
+            "Popular Creator",
+            "Awarded for creating content with 10+ upvotes",
+            true
+        );
+        
+        _createBadge(
+            TRUSTED_MEMBER_BADGE,
+            "Trusted Member",
+            "Awarded for achieving a trust score of 100+",
+            true
+        );
+        
+        _createBadge(
+            COMMUNITY_BUILDER_BADGE,
+            "Community Builder",
+            "Awarded for making 5+ contributions",
+            true
+        );
+        
+        _createBadge(
+            FEATURED_CONTRIBUTOR_BADGE,
+            "Featured Contributor",
+            "Awarded for having a contribution featured",
+            true
+        );
+    }
+    
+    /**
+     * @dev Create a new badge type
+     */
+    function _createBadge(
+        uint256 badgeId,
+        string memory name,
+        string memory description,
+        bool soulbound
+    ) internal {
+        Badge storage badge = badges[badgeId];
+        badge.badgeId = badgeId;
+        badge.name = name;
+        badge.description = description;
+        badge.soulbound = soulbound;
+        badge.totalSupply = 0;
+    }
+    
+    /**
+     * @dev Award a badge to a user
+     * @param to Address to award the badge to
+     * @param badgeId ID of the badge to award
+     */
+    function awardBadge(address to, uint256 badgeId) public {
+        require(
+            msg.sender == owner() || msg.sender == address(contributionsContract),
+            "Not authorized to award badges"
+        );
+        require(badges[badgeId].badgeId != 0, "Badge does not exist");
+        require(!badges[badgeId].holders[to], "User already has this badge");
+        
+        badges[badgeId].holders[to] = true;
+        badges[badgeId].totalSupply++;
+        userBadges[to].push(badgeId);
+        
+        _mint(to, badgeId, 1, "");
+        
+        emit BadgeAwarded(badgeId, to, badges[badgeId].name);
+    }
+    
+    /**
+     * @dev Check and award automatic badges based on user activity
+     * @param user Address of the user to check
+     */
+    function checkAndAwardAutomaticBadges(address user) public {
+        uint256[] memory contributions = contributionsContract.getUserContributions(user);
+        uint256 trustScore = contributionsContract.getUserTrustScore(user);
+        
+        // First Contribution Badge
+        if (contributions.length >= 1 && !badges[FIRST_CONTRIBUTION_BADGE].holders[user]) {
+            awardBadge(user, FIRST_CONTRIBUTION_BADGE);
+        }
+        
+        // Community Builder Badge
+        if (contributions.length >= 5 && !badges[COMMUNITY_BUILDER_BADGE].holders[user]) {
+            awardBadge(user, COMMUNITY_BUILDER_BADGE);
+        }
+        
+        // Trusted Member Badge
+        if (trustScore >= 100 && !badges[TRUSTED_MEMBER_BADGE].holders[user]) {
+            awardBadge(user, TRUSTED_MEMBER_BADGE);
+        }
+        
+        // Check for Popular Creator Badge
+        if (!badges[POPULAR_CREATOR_BADGE].holders[user]) {
+            for (uint256 i = 0; i < contributions.length; i++) {
+                (, , , , , uint256 upvotes, , ) = contributionsContract.getContribution(contributions[i]);
+                if (upvotes >= 10) {
+                    awardBadge(user, POPULAR_CREATOR_BADGE);
+                    break;
+                }
+            }
+        }
+        
+        // Check for Featured Contributor Badge
+        if (!badges[FEATURED_CONTRIBUTOR_BADGE].holders[user]) {
+            for (uint256 i = 0; i < contributions.length; i++) {
+                (, , , , , , , bool featured) = contributionsContract.getContribution(contributions[i]);
+                if (featured) {
+                    awardBadge(user, FEATURED_CONTRIBUTOR_BADGE);
+                    break;
+                }
+            }
+        }
+    }
+    
+    /**
+     * @dev Get badge details
+     * @param badgeId ID of the badge
+     */
+    function getBadge(uint256 badgeId) public view returns (
+        string memory name,
+        string memory description,
+        string memory imageURI,
+        uint256 totalSupply,
+        bool soulbound
+    ) {
+        require(badges[badgeId].badgeId != 0, "Badge does not exist");
+        
+        Badge storage badge = badges[badgeId];
+        return (
+            badge.name,
+            badge.description,
+            badge.imageURI,
+            badge.totalSupply,
+            badge.soulbound
+        );
+    }
+    
+    /**
+     * @dev Get user's badges
+     * @param user Address of the user
+     */
+    function getUserBadges(address user) public view returns (uint256[] memory) {
+        return userBadges[user];
+    }
+    
+    /**
+     * @dev Check if user has a specific badge
+     * @param user Address of the user
+     * @param badgeId ID of the badge
+     */
+    function hasBadge(address user, uint256 badgeId) public view returns (bool) {
+        return badges[badgeId].holders[user];
+    }
+    
+    /**
+     * @dev Override transfer to prevent soulbound badges from being transferred
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override {
+        require(!badges[id].soulbound, "Soulbound badges cannot be transferred");
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+    
+    /**
+     * @dev Override batch transfer to prevent soulbound badges from being transferred
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override {
+        for (uint256 i = 0; i < ids.length; i++) {
+            require(!badges[ids[i]].soulbound, "Soulbound badges cannot be transferred");
+        }
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
+    }
+}
+
+/**
+ * @title IntuitionVoting
+ * @dev Simple voting contract for community curation
+ * Handles weighted voting based on user trust scores
+ */
+contract IntuitionVoting is Ownable, ReentrancyGuard {
+    using Counters for Counters.Counter;
+    
+    Counters.Counter private _proposalIdCounter;
+    
+    struct Proposal {
+        uint256 proposalId;
+        string title;
+        string description;
+        uint256 targetTokenId; // Contribution being voted on
+        address proposer;
+        uint256 startTime;
+        uint256 endTime;
+        uint256 totalVotes;
+        uint256 yesVotes;
+        uint256 noVotes;
+        bool executed;
+        ProposalType proposalType;
+        mapping(address => bool) hasVoted;
+        mapping(address => uint256) votes; // Vote weight
+        mapping(address => bool) voteChoice; // true = yes, false = no
+    }
+    
+    enum ProposalType {
+        Feature,      // Feature a contribution
+        Remove,       // Remove inappropriate content
+        Award,        // Award special recognition
+        Governance    // General governance decisions
+    }
+    
+    mapping(uint256 => Proposal) public proposals;
+    mapping(uint256 => bool) public featuredContributions;
+    
+    IntuitionContributions public contributionsContract;
+    IntuitionBadges public badgesContract;
+    
+    uint256 public constant VOTING_PERIOD = 7 days;
+    uint256 public constant MIN_TRUST_SCORE_TO_PROPOSE = 50;
+    uint256 public constant QUORUM_THRESHOLD = 100; // Minimum total vote weight needed
+    
+    event ProposalCreated(
+        uint256 indexed proposalId,
+        address indexed proposer,
+        ProposalType proposalType,
+        uint256 targetTokenId,
+        string title
+    );
+    
+    event VoteCast(
+        uint256 indexed proposalId,
+        address indexed voter,
+        bool choice,
+        uint256 weight
+    );
+    
+    event ProposalExecuted(
+        uint256 indexed proposalId,
+        bool passed
+    );
+    
+    constructor(address _contributionsContract, address _badgesContract) {
+        contributionsContract = IntuitionContributions(_contributionsContract);
+        badgesContract = IntuitionBadges(_badgesContract);
+    }
+    
+    /**
+     * @dev Create a new proposal
+     * @param title Title of the proposal
+     * @param description Description of the proposal
+     * @param targetTokenId Token ID being voted on (if applicable)
+     * @param proposalType Type of proposal
+     */
+    function createProposal(
+        string memory title,
+        string memory description,
+        uint256 targetTokenId,
+        ProposalType proposalType
+    ) public nonReentrant returns (uint256) {
+        require(
+            contributionsContract.getUserTrustScore(msg.sender) >= MIN_TRUST_SCORE_TO_PROPOSE,
+            "Insufficient trust score to create proposals"
+        );
+        require(bytes(title).length > 0, "Title cannot be empty");
+        require(bytes(description).length > 0, "Description cannot be empty");
+        
+        uint256 proposalId = _proposalIdCounter.current();
+        _proposalIdCounter.increment();
+        
+        Proposal storage proposal = proposals[proposalId];
+        proposal.proposalId = proposalId;
+        proposal.title = title;
+        proposal.description = description;
+        proposal.targetTokenId = targetTokenId;
+        proposal.proposer = msg.sender;
+        proposal.startTime = block.timestamp;
+        proposal.endTime = block.timestamp + VOTING_PERIOD;
+        proposal.proposalType = proposalType;
+        proposal.totalVotes = 0;
+        proposal.yesVotes = 0;
+        proposal.noVotes = 0;
+        proposal.executed = false;
+        
+        emit ProposalCreated(proposalId, msg.sender, proposalType, targetTokenId, title);
+        
+        return proposalId;
+    }
+    
+    /**
+     * @dev Vote on a proposal
+     * @param proposalId ID of the proposal to vote on
+     * @param choice True for yes, false for no
+     */
+    function vote(uint256 proposalId, bool choice) public nonReentrant {
+        require(proposals[proposalId].proposalId != 0, "Proposal does not exist");
+        require(block.timestamp <= proposals[proposalId].endTime, "Voting period has ended");
+        require(!proposals[proposalId].hasVoted[msg.sender], "Already voted on this proposal");
+        
+        Proposal storage proposal = proposals[proposalId];
+        uint256 voteWeight = calculateVoteWeight(msg.sender);
+        
+        require(voteWeight > 0, "No voting power");
+        
+        proposal.hasVoted[msg.sender] = true;
+        proposal.votes[msg.sender] = voteWeight;
+        proposal.voteChoice[msg.sender] = choice;
+        proposal.totalVotes += voteWeight;
+        
+        if (choice) {
+            proposal.yesVotes += voteWeight;
+        } else {
+            proposal.noVotes += voteWeight;
+        }
+        
+        emit VoteCast(proposalId, msg.sender, choice, voteWeight);
+    }
+    
+    /**
+     * @dev Execute a proposal after voting period ends
+     * @param proposalId ID of the proposal to execute
+     */
+    function executeProposal(uint256 proposalId) public nonReentrant {
+        require(proposals[proposalId].proposalId != 0, "Proposal does not exist");
+        require(block.timestamp > proposals[proposalId].endTime, "Voting period not ended");
+        require(!proposals[proposalId].executed, "Proposal already executed");
+        require(proposals[proposalId].totalVotes >= QUORUM_THRESHOLD, "Quorum not met");
+        
+        Proposal storage proposal = proposals[proposalId];
+        proposal.executed = true;
+        
+        bool passed = proposal.yesVotes > proposal.noVotes;
+        
+        if (passed) {
+            if (proposal.proposalType == ProposalType.Feature) {
+                contributionsContract.featureContribution(proposal.targetTokenId);
+                featuredContributions[proposal.targetTokenId] = true;
+            } else if (proposal.proposalType == ProposalType.Award) {
+                // Award special badge or recognition
+                (, address creator, , , , , , ,) = contributionsContract.getContribution(proposal.targetTokenId);
+                badgesContract.awardBadge(creator, IntuitionBadges.FEATURED_CONTRIBUTOR_BADGE);
+            }
+            // Additional proposal types can be implemented here
+        }
+        
+        emit ProposalExecuted(proposalId, passed);
+    }
+    
+    /**
+     * @dev Calculate voting weight based on user's trust score and badges
+     * @param user Address of the user
+     */
+    function calculateVoteWeight(address user) public view returns (uint256) {
+        uint256 trustScore = contributionsContract.getUserTrustScore(user);
+        uint256 badgeBonus = 0;
+        
+        // Bonus weight for badges
+        if (badgesContract.hasBadge(user, IntuitionBadges.TRUSTED_MEMBER_BADGE)) {
+            badgeBonus += 10;
+        }
+        if (badgesContract.hasBadge(user, IntuitionBadges.COMMUNITY_BUILDER_BADGE)) {
+            badgeBonus += 5;
+        }
+        if (badgesContract.hasBadge(user, IntuitionBadges.FEATURED_CONTRIBUTOR_BADGE)) {
+            badgeBonus += 3;
+        }
+        
+        return trustScore + badgeBonus;
+    }
+    
+    /**
+     * @dev Get proposal details
+     * @param proposalId ID of the proposal
+     */
+    function getProposal(uint256 proposalId) public view returns (
+        string memory title,
+        string memory description,
+        uint256 targetTokenId,
+        address proposer,
+        uint256 startTime,
+        uint256 endTime,
+        uint256 totalVotes,
+        uint256 yesVotes,
+        uint256 noVotes,
+        bool executed,
+        ProposalType proposalType
+    ) {
+        require(proposals[proposalId].proposalId != 0, "Proposal does not exist");
+        
+        Proposal storage proposal = proposals[proposalId];
+        return (
+            proposal.title,
+            proposal.description,
+            proposal.targetTokenId,
+            proposal.proposer,
+            proposal.startTime,
+            proposal.endTime,
+            proposal.totalVotes,
+            proposal.yesVotes,
+            proposal.noVotes,
+            proposal.executed,
+            proposal.proposalType
+        );
+    }
+    
+    /**
+     * @dev Get total number of proposals
+     */
+    function totalProposals() public view returns (uint256) {
+        return _proposalIdCounter.current();
+    }
+    
+    /**
+     * @dev Check if a user has voted on a proposal
+     * @param proposalId ID of the proposal
+     * @param user Address of the user
+     */
+    function hasVoted(uint256 proposalId, address user) public view returns (bool) {
+        return proposals[proposalId].hasVoted[user];
+    }
+    
+    /**
+     * @dev Get user's vote on a proposal
+     * @param proposalId ID of the proposal
+     * @param user Address of the user
+     */
+    function getUserVote(uint256 proposalId, address user) public view returns (bool choice, uint256 weight) {
+        require(proposals[proposalId].hasVoted[user], "User has not voted on this proposal");
+        return (proposals[proposalId].voteChoice[user], proposals[proposalId].votes[user]);
+    }
+}
+
+/**
+ * @title IntuitionFactory
+ * @dev Factory contract for deploying and managing Intuition platform contracts
+ * Provides a central point for contract deployment and upgrades
+ */
+contract IntuitionFactory is Ownable {
+    struct PlatformContracts {
+        address contributions;
+        address badges;
+        address voting;
+        uint256 deploymentBlock;
+        bool active;
+    }
+    
+    PlatformContracts public currentContracts;
+    PlatformContracts[] public previousVersions;
+    
+    event PlatformDeployed(
+        address contributionsContract,
+        address badgesContract,
+        address votingContract,
+        uint256 version
+    );
+    
+    event PlatformUpgraded(
+        uint256 oldVersion,
+        uint256 newVersion
+    );
+    
+    /**
+     * @dev Deploy a new version of the Intuition platform
+     */
+    function deployPlatform() public onlyOwner returns (
+        address contributions,
+        address badges,
+        address voting
+    ) {
+        // Deploy Contributions contract
+        IntuitionContributions contributionsContract = new IntuitionContributions();
+        
+        // Deploy Badges contract
+        IntuitionBadges badgesContract = new IntuitionBadges(address(contributionsContract));
+        
+        // Deploy Voting contract
+        IntuitionVoting votingContract = new IntuitionVoting(
+            address(contributionsContract),
+            address(badgesContract)
+        );
+        
+        // Store current contracts as previous version if exists
+        if (currentContracts.contributions != address(0)) {
+            currentContracts.active = false;
+            previousVersions.push(currentContracts);
+        }
+        
+        // Update current contracts
+        currentContracts = PlatformContracts({
+            contributions: address(contributionsContract),
+            badges: address(badgesContract),
+            voting: address(votingContract),
+            deploymentBlock: block.number,
+            active: true
+        });
+        
+        emit PlatformDeployed(
+            address(contributionsContract),
+            address(badgesContract),
+            address(votingContract),
+            previousVersions.length
+        );
+        
+        return (
+            address(contributionsContract),
+            address(badgesContract),
+            address(votingContract)
+        );
+    }
+    
+    /**
+     * @dev Get current platform contracts
+     */
+    function getCurrentContracts() public view returns (
+        address contributions,
+        address badges,
+        address voting,
+        uint256 deploymentBlock,
+        bool active
+    ) {
+        return (
+            currentContracts.contributions,
+            currentContracts.badges,
+            currentContracts.voting,
+            currentContracts.deploymentBlock,
+            currentContracts.active
+        );
+    }
+    
+    /**
+     * @dev Get number of platform versions
+     */
+    function getVersionCount() public view returns (uint256) {
+        return previousVersions.length + (currentContracts.contributions != address(0) ? 1 : 0);
+    }
+    
+    /**
+     * @dev Get contracts for a specific version
+     * @param version Version number (0 = oldest)
+     */
+    function getVersionContracts(uint256 version) public view returns (
+        address contributions,
+        address badges,
+        address voting,
+        uint256 deploymentBlock,
+        bool active
+    ) {
+        if (version < previousVersions.length) {
+            PlatformContracts storage contracts = previousVersions[version];
+            return (
+                contracts.contributions,
+                contracts.badges,
+                contracts.voting,
+                contracts.deploymentBlock,
+                contracts.active
+            );
+        } else if (version == previousVersions.length && currentContracts.contributions != address(0)) {
+            return getCurrentContracts();
+        } else {
+            revert("Version does not exist");
+        }
+    }
+}

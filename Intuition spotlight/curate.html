@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curate Contributions - Intuition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* Light mode variables */
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --foreground: #0f172a;
+            --muted: #64748b;
+            --primary: #8b5cf6;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --foreground: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #a855f7;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #fbbf24;
+            --error: #f87171;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background); color: var(--foreground); line-height: 1.6;
+        }
+        .header {
+            background: var(--background); border-bottom: 1px solid var(--border);
+            padding: 1rem 0; position: sticky; top: 0; z-index: 50;
+        }
+        .header-container {
+            max-width: 1200px; margin: 0 auto; padding: 0 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo {
+            text-decoration: none; color: var(--foreground); font-weight: 600; font-size: 1.25rem;
+        }
+        .nav { display: flex; gap: 2rem; }
+        .nav-link {
+            color: var(--muted); text-decoration: none; font-size: 0.95rem; transition: color 0.2s;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--foreground); }
+        .nav-link.active::after {
+            content: ''; position: absolute; bottom: -8px; left: 0; right: 0;
+            height: 2px; background: var(--primary); border-radius: 1px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--foreground);
+            font-size: 0.9rem;
+            width: 250px;
+        }
+
+        .search-box::placeholder {
+            color: var(--muted);
+        }
+
+        .connect-wallet-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .connect-wallet-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface);
+            border-color: var(--primary);
+        }
+        .main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .page-header { text-align: center; margin-bottom: 3rem; }
+        .page-title { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+        .page-subtitle { color: var(--muted); font-size: 1.1rem; }
+        
+        /* Filters */
+        .filters {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;
+        }
+        .filter-row {
+            display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .filter-label { font-weight: 500; font-size: 0.9rem; }
+        .filter-select, .filter-input {
+            padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;
+            background: var(--background); color: var(--foreground);
+        }
+        .filter-btn {
+            background: var(--primary); color: white; border: none;
+            padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;
+            font-weight: 500; transition: background 0.2s;
+        }
+        .filter-btn:hover { background: #7c3aed; }
+        
+        /* Stats */
+        .stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem; margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 1rem; text-align: center;
+        }
+        .stat-value { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .stat-label { color: var(--muted); font-size: 0.9rem; }
+        
+        /* Contributions Grid */
+        .contributions-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        .contribution-card {
+            background: var(--background); border: 1px solid var(--border);
+            border-radius: 12px; overflow: hidden; transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .contribution-card:hover {
+            border-color: var(--primary); transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.1);
+        }
+        .card-image {
+            height: 160px; position: relative; display: flex;
+            align-items: center; justify-content: center; font-size: 2.5rem;
+        }
+        .card-image.research { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-image.article { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .card-image.video { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .card-image.art { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .card-badge {
+            position: absolute; top: 0.75rem; left: 0.75rem;
+            background: var(--surface); color: var(--foreground);
+            padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem;
+            font-weight: 600; border: 1px solid var(--border); backdrop-filter: blur(10px);
+        }
+        .card-content { padding: 1.25rem; }
+        .card-title {
+            font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; line-height: 1.3;
+        }
+        .card-author {
+            color: var(--muted); font-size: 0.8rem; font-family: 'Courier New', monospace;
+            margin-bottom: 0.75rem;
+        }
+        .card-description {
+            color: var(--muted); font-size: 0.9rem; line-height: 1.5;
+            margin-bottom: 1rem; display: -webkit-box;
+            -webkit-box-orient: vertical; 
+            line-clamp: 3;
+           overflow: hidden;
+        }
+        .card-tags {
+            display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;
+        }
+        .tag {
+            background: rgba(139, 92, 246, 0.1); color: var(--primary);
+            padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .card-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 0.75rem; border-top: 1px solid var(--border);
+        }
+        .vote-section {
+            display: flex; gap: 0.5rem;
+        }
+        .vote-btn {
+            background: transparent; border: 1px solid var(--border); color: var(--muted);
+            padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer;
+            display: flex; align-items: center; gap: 0.25rem; font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .vote-btn:hover { border-color: var(--primary); color: var(--foreground); }
+        .vote-btn.active { background: rgba(139, 92, 246, 0.1); border-color: var(--primary); color: var(--primary); }
+        .curate-btn {
+            background: var(--primary); color: white; border: none;
+            padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer;
+            font-size: 0.8rem; font-weight: 500; transition: all 0.2s;
+        }
+        .curate-btn:hover { background: #7c3aed; }
+        .curate-btn.curated { background: var(--success); }
+        .curate-btn.rejected { background: var(--error); }
+        
+        /* Modal */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: var(--background); margin: 5% auto; padding: 2rem;
+            border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-title { font-size: 1.5rem; font-weight: 600; }
+        .close { font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+        .close:hover { color: var(--foreground); }
+        .modal-body { margin-bottom: 1.5rem; }
+        .modal-actions {
+            display: flex; gap: 1rem; justify-content: flex-end;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; border: none; font-size: 1rem;
+        }
+        .btn-secondary {
+            background: transparent; color: var(--foreground); border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--surface); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #0ea571; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        
+        @media (max-width: 768px) {
+            .header-container { padding: 0 1rem; }
+            .nav { display: none; }
+            .header-actions {
+                gap: 0.5rem;
+            }
+            .search-box {
+                width: 180px;
+                font-size: 0.8rem;
+            }
+            .theme-toggle {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            .connect-wallet-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .main { padding: 1rem; }
+            .page-title { font-size: 2rem; }
+            .filter-row { flex-direction: column; align-items: stretch; }
+            .contributions-grid { grid-template-columns: 1fr; }
+            .modal-content { margin: 10% auto; width: 95%; padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="homepage.html" class="logo">Intuition</a>
+            <nav class="nav">
+                <a href="homepage.html" class="nav-link">Home</a>
+                <a href="submit.html" class="nav-link">Submit</a>
+                <a href="curate.html" class="nav-link active">Curate</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <a href="featured.html" class="nav-link">Featured</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+            </nav>
+            <div class="header-actions">
+                <input type="text" class="search-box" placeholder="Search">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+                <button class="connect-wallet-btn">🔗 Connect Wallet</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="page-header">
+            <h1 class="page-title">Curate Contributions</h1>
+            <p class="page-subtitle">Review and curate community submissions to maintain quality</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="curatePending">0</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="curatedToday">0</div>
+                <div class="stat-label">Curated Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="curateApprovalRate">0%</div>
+                <div class="stat-label">Approval Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="curateFeatured">0</div>
+                <div class="stat-label">Featured</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Content Type</label>
+                    <select class="filter-select" id="contentTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="research">Research</option>
+                        <option value="article">Article</option>
+                        <option value="video">Video</option>
+                        <option value="art">Art</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" class="filter-input" id="searchFilter" placeholder="Search contributions...">
+                </div>
+                <button class="filter-btn" onclick="applyFilters()">Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- Contributions Grid -->
+        <div class="contributions-grid" id="contributionsGrid">
+            <!-- Contribution cards will be dynamically generated -->
+        </div>
+    </main>
+
+    <!-- Modal for detailed view -->
+    <div class="modal" id="contributionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Review Contribution</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content will be dynamically generated -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="rejectContribution()">Reject</button>
+                <button class="btn btn-success" onclick="approveContribution()">Approve</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeToggle = document.querySelector('.theme-toggle');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                html.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Initialize theme from localStorage
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.querySelector('.theme-toggle');
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+            } else {
+                themeToggle.textContent = '🌙';
+            }
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            initializePage();
+        });
+
+        // Dynamic contributions loading
+        let contributions = [];
+
+        // Load contributions from localStorage
+        function loadContributions() {
+            try {
+                const savedContributions = localStorage.getItem('myContributions');
+                if (savedContributions) {
+                    contributions = JSON.parse(savedContributions).filter(contribution => 
+                        contribution.status === 'Pending Review'
+                    );
+                }
+                renderContributions(contributions);
+            } catch (e) {
+                console.warn('Could not load contributions from localStorage:', e);
+                contributions = [];
+                renderContributions(contributions);
+            }
+        }
+
+        let currentContribution = null;
+
+        // Initialize the page
+        function initializePage() {
+            loadContributions();
+            updateCurateStats();
+        }
+
+        // Render contributions
+        function renderContributions(contributionsToRender) {
+            const grid = document.getElementById('contributionsGrid');
+            grid.innerHTML = '';
+
+            contributionsToRender.forEach(contribution => {
+                const card = createContributionCard(contribution);
+                grid.appendChild(card);
+            });
+            updateCurateStats();
+        }
+
+        // Create contribution card
+        function createContributionCard(contribution) {
+            const card = document.createElement('div');
+            card.className = 'contribution-card';
+            card.innerHTML = `
+                <div class="card-image ${contribution.contentType}">
+                    <span class="card-badge">${contribution.contentType.charAt(0).toUpperCase() + contribution.contentType.slice(1)}</span>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">${contribution.title}</h3>
+                    <div class="card-author">by ${contribution.author}</div>
+                    <p class="card-description">${contribution.description}</p>
+                    <div class="card-tags">
+                        ${contribution.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                    <div class="card-footer">
+                        <div class="vote-section">
+                            <button class="vote-btn" onclick="vote(${contribution.id}, 'up')">
+                                👍 <span>${contribution.votes.up}</span>
+                            </button>
+                            <button class="vote-btn" onclick="vote(${contribution.id}, 'down')">
+                                👎 <span>${contribution.votes.down}</span>
+                            </button>
+                        </div>
+                        <button class="curate-btn" onclick="openModal(${contribution.id})">
+                            Review
+                        </button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        // Vote functionality
+        function vote(contributionId, voteType) {
+            const contribution = contributions.find(c => c.id === contributionId);
+            if (contribution) {
+                contribution.votes[voteType]++;
+                renderContributions(contributions);
+            }
+        }
+
+        // Open modal
+        function openModal(contributionId) {
+            currentContribution = contributions.find(c => c.id === contributionId);
+            if (currentContribution) {
+                const modalBody = document.getElementById('modalBody');
+                modalBody.innerHTML = `
+                    <h3>${currentContribution.title}</h3>
+                    <p><strong>Author:</strong> ${currentContribution.author || 'Anonymous'}</p>
+                    <p><strong>Content Type:</strong> ${currentContribution.contentType}</p>
+                    <p><strong>Description:</strong> ${currentContribution.description}</p>
+                    <p><strong>Tags:</strong> ${currentContribution.tags ? currentContribution.tags.join(', ') : 'No tags'}</p>
+                    <p><strong>External Link:</strong> ${currentContribution.externalLink || 'No external link'}</p>
+                    <p><strong>Uploaded Files:</strong> ${currentContribution.uploadedFiles ? currentContribution.uploadedFiles.length + ' files' : 'No files'}</p>
+                    <p><strong>Submission Date:</strong> ${new Date(currentContribution.submissionDate).toLocaleDateString()}</p>
+                `;
+                document.getElementById('contributionModal').style.display = 'block';
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('contributionModal').style.display = 'none';
+            currentContribution = null;
+        }
+
+        // Approve contribution
+        function approveContribution() {
+            if (currentContribution) {
+                currentContribution.status = 'Approved';
+                currentContribution.approvalDate = new Date().toISOString();
+                
+                // Update localStorage
+                try {
+                    const savedContributions = JSON.parse(localStorage.getItem('myContributions') || '[]');
+                    const updatedContributions = savedContributions.map(contribution => 
+                        contribution.id === currentContribution.id 
+                            ? { ...contribution, status: 'Approved', approvalDate: currentContribution.approvalDate }
+                            : contribution
+                    );
+                    localStorage.setItem('myContributions', JSON.stringify(updatedContributions));
+                } catch (e) {
+                    console.warn('Could not update localStorage:', e);
+                }
+                
+                alert(`Contribution "${currentContribution.title}" has been approved!`);
+                closeModal();
+                loadContributions(); // Reload to refresh the list
+                updateCurateStats();
+            }
+        }
+
+        // Reject contribution
+        function rejectContribution() {
+            if (currentContribution) {
+                currentContribution.status = 'Rejected';
+                
+                // Update localStorage
+                try {
+                    const savedContributions = JSON.parse(localStorage.getItem('myContributions') || '[]');
+                    const updatedContributions = savedContributions.map(contribution => 
+                        contribution.id === currentContribution.id 
+                            ? { ...contribution, status: 'Rejected' }
+                            : contribution
+                    );
+                    localStorage.setItem('myContributions', JSON.stringify(updatedContributions));
+                } catch (e) {
+                    console.warn('Could not update localStorage:', e);
+                }
+                
+                alert(`Contribution "${currentContribution.title}" has been rejected.`);
+                closeModal();
+                loadContributions(); // Reload to refresh the list
+                updateCurateStats();
+            }
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const contentTypeFilter = document.getElementById('contentTypeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            let filteredContributions = contributions;
+
+            if (contentTypeFilter) {
+                filteredContributions = filteredContributions.filter(c => c.contentType === contentTypeFilter);
+            }
+
+            if (statusFilter) {
+                filteredContributions = filteredContributions.filter(c => c.status === statusFilter);
+            }
+
+            if (searchFilter) {
+                filteredContributions = filteredContributions.filter(c => 
+                    c.title.toLowerCase().includes(searchFilter) ||
+                    c.description.toLowerCase().includes(searchFilter) ||
+                    c.tags.some(tag => tag.toLowerCase().includes(searchFilter))
+                );
+            }
+
+            renderContributions(filteredContributions);
+            updateCurateStats();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('contributionModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize page on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            initializeConnectWallet();
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'myContributions') {
+                    loadContributions();
+                    updateCurateStats();
+                }
+            });
+        });
+
+        // Connect Wallet Functionality
+        function initializeConnectWallet() {
+            const connectWalletBtn = document.querySelector('.connect-wallet-btn');
+            if (connectWalletBtn) {
+                connectWalletBtn.addEventListener('click', function() {
+                    alert('Wallet connection would be implemented here');
+                });
+            }
+        }
+
+        // Dynamic curate stats
+        function updateCurateStats() {
+            let all = [];
+            try {
+                const raw = localStorage.getItem('myContributions');
+                all = raw ? JSON.parse(raw) : [];
+            } catch (_) {}
+
+            const pending = all.filter(c => c.status === 'Pending Review').length;
+            const approved = all.filter(c => c.status === 'Approved').length;
+            const rejected = all.filter(c => c.status === 'Rejected').length;
+            const featured = approved; // featured == approved in current flow
+
+            // Curated Today: approvals or rejections made today
+            const startOfDay = new Date();
+            startOfDay.setHours(0,0,0,0);
+            const curatedToday = all.filter(c => (c.approvalDate && new Date(c.approvalDate) >= startOfDay) || (c.decisionDate && new Date(c.decisionDate) >= startOfDay)).length;
+
+            const approvalRate = all.length === 0 ? 0 : Math.round((approved / all.length) * 100);
+
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val); };
+            set('curatePending', pending);
+            set('curatedToday', curatedToday);
+            set('curateApprovalRate', `${approvalRate}%`);
+            set('curateFeatured', featured);
+        }
+    </script>
+</body>
+</html>

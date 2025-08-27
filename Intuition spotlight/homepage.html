@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Intuition - Decentralized Knowledge Curation Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Light mode variables */
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --surface-light: #f1f5f9;
+            --foreground: #0f172a;
+            --muted: #64748b;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --border: #e2e8f0;
+            --accent: #a855f7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --surface-light: #334155;
+            --foreground: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #a855f7;
+            --primary-hover: #c084fc;
+            --border: #334155;
+            --accent: #c084fc;
+            --success: #22c55e;
+            --warning: #fbbf24;
+            --error: #f87171;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--background);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--foreground);
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--foreground);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 1px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--foreground);
+            font-size: 0.9rem;
+            width: 250px;
+        }
+
+        .search-box::placeholder {
+            color: var(--muted);
+        }
+
+        .connect-wallet-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .connect-wallet-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface);
+            border-color: var(--primary);
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 4rem 0;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--foreground) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .hero-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .hero-btn.primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .hero-btn.secondary {
+            background: transparent;
+            color: var(--foreground);
+            border: 2px solid var(--border);
+        }
+
+        .hero-btn.secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Feature Cards */
+        .features-section {
+            margin-bottom: 4rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--foreground);
+        }
+
+        .feature-description {
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: 1.1rem;
+            max-width: 500px;
+        }
+
+        .view-all-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+
+        .view-all-link:hover {
+            color: var(--accent);
+        }
+
+        /* Contribution Cards Grid */
+        .contributions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .contribution-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .contribution-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.1);
+        }
+
+        .card-image {
+            height: 200px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .card-image.research {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-image.art {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .card-image.video {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            background: var(--surface);
+            color: var(--foreground);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-badge.featured {
+            background: var(--primary);
+            color: white;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .card-author {
+            color: var(--muted);
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-linked {
+            color: var(--primary);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 1rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .share-btn {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .share-btn:hover {
+            color: var(--foreground);
+        }
+
+        /* Community Impact Section */
+        .community-impact {
+            margin-bottom: 4rem;
+        }
+
+        .impact-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .impact-subtitle {
+            color: var(--muted);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-growth {
+            color: var(--success);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+
+
+        .visualization-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .explore-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+
+        .explore-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 0 1rem;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .nav {
+                display: none;
+            }
+
+            .search-box {
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .main {
+                padding: 1rem;
+            }
+
+            .hero-section {
+                padding: 2rem 0;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-description {
+                font-size: 1.1rem;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .feature-card {
+                padding: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .contributions-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .graph-content {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .card-image {
+                height: 160px;
+            }
+
+            .card-content {
+                padding: 1rem;
+            }
+
+            .card-title {
+                font-size: 1.1rem;
+            }
+
+            .trending-section,
+            .visualization-section {
+                padding: 1rem;
+            }
+
+            .trending-item {
+                padding: 0.75rem 0;
+            }
+
+            .visualization-placeholder {
+                height: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .header-actions {
+                justify-content: space-between;
+            }
+
+            .search-box {
+                max-width: none;
+                flex: 1;
+            }
+
+            .connect-wallet-btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            .main {
+                padding: 0.75rem;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+            }
+
+            .impact-title {
+                font-size: 2rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .metric-card {
+                padding: 1rem;
+            }
+
+            .metric-value {
+                font-size: 1.5rem;
+            }
+
+            .contributions-grid {
+                gap: 0.75rem;
+            }
+
+            .contribution-card {
+                border-radius: 8px;
+            }
+
+            .card-image {
+                height: 140px;
+            }
+
+            .card-content {
+                padding: 0.75rem;
+            }
+
+            .card-title {
+                font-size: 1rem;
+            }
+
+            .card-stats {
+                gap: 0.5rem;
+                font-size: 0.8rem;
+            }
+
+            .trending-section,
+            .visualization-section {
+                padding: 0.75rem;
+            }
+
+            .trending-header {
+                font-size: 0.9rem;
+            }
+
+            .trending-info h4 {
+                font-size: 0.9rem;
+            }
+
+            .trending-stats {
+                font-size: 0.75rem;
+            }
+
+            .trending-connections {
+                padding: 0.2rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            .visualization-placeholder {
+                height: 120px;
+                font-size: 0.9rem;
+            }
+
+            .explore-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Touch-friendly interactions */
+        @media (hover: none) and (pointer: coarse) {
+            .contribution-card:hover {
+                transform: none;
+            }
+
+            .contribution-card:active {
+                transform: scale(0.98);
+            }
+
+            .connect-wallet-btn:active,
+            .share-btn:active,
+            .explore-btn:active {
+                transform: scale(0.95);
+            }
+
+            .nav-link {
+                padding: 0.5rem 0;
+            }
+
+            .card-stats .stat {
+                padding: 0.25rem 0.5rem;
+                border-radius: 4px;
+            }
+
+            .card-stats .stat:active {
+                background: var(--surface);
+            }
+
+            /* Ensure minimum touch target size */
+            .connect-wallet-btn,
+            .share-btn,
+            .explore-btn,
+            .mobile-nav-toggle {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .nav-link {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+            }
+
+            /* Improve touch feedback */
+            .contribution-card,
+            .connect-wallet-btn,
+            .share-btn,
+            .explore-btn {
+                -webkit-tap-highlight-color: rgba(139, 92, 246, 0.1);
+            }
+        }
+
+        /* Improved mobile navigation */
+        .mobile-nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--foreground);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-nav-toggle {
+                display: block;
+            }
+
+            .nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--background);
+                border-bottom: 1px solid var(--border);
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav.active {
+                display: flex;
+            }
+
+            .nav-link {
+                padding: 0.75rem 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .nav-link:last-child {
+                border-bottom: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <a href="#" class="logo">
+                <img src="intuition-logo.svg" alt="Intuition Logo" style="height: 32px; width: 32px;">
+                Intuition
+            </a>
+            
+            <button class="mobile-nav-toggle" aria-label="Toggle navigation">
+                ☰
+            </button>
+            
+            <nav class="nav">
+                <a href="homepage.html" class="nav-link active">Home</a>
+                <a href="submit.html" class="nav-link">Submit</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <a href="curate.html" class="nav-link">Curate</a>
+                <a href="featured.html" class="nav-link">Featured</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+            </nav>
+            
+            <div class="header-actions">
+                <input type="text" class="search-box" placeholder="Search">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+                <button class="connect-wallet-btn">
+                    🔗 Connect Wallet
+                </button>
+            </div>
+        </div>
+    </header>
+
+        <!-- Main Content -->
+    <main class="main">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    ⭐ Decentralized Knowledge Curation
+                </div>
+                <h1 class="hero-title">Curate Knowledge, Mint Insights</h1>
+                <p class="hero-description">
+                    Submit creative contributions, link them to knowledge objects, and let the community curate the most valuable insights. Turn knowledge into NFTs and build the future of decentralized learning.
+                </p>
+                <div class="hero-actions">
+                    <a href="submit.html" class="hero-btn primary">Submit Content →</a>
+    
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Cards -->
+        <section class="features-section">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <h3 class="feature-title">Submit Contribution</h3>
+                    <p class="feature-description">Upload creative work and connect it to knowledge objects in our decentralized graph.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3 class="feature-title">Community Curation</h3>
+                    <p class="feature-description">Let the community vote and curators highlight the most valuable contributions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖼️</div>
+                    <h3 class="feature-title">Mint & Reward</h3>
+                    <p class="feature-description">Featured contributions become NFTs, creating lasting value for knowledge creators.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community Impact -->
+        <section class="community-impact">
+            <h2 class="impact-title">Community Impact</h2>
+            <p class="impact-subtitle">See how our community is building the future of decentralized knowledge curation</p>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">📄</div>
+                    <div class="metric-value" id="impactTotalContributions">0</div>
+                    <div class="metric-label">Total Contributions</div>
+                    <div class="metric-growth" id="impactContributionsGrowth">+0% this month</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">👥</div>
+                    <div class="metric-value" id="impactActiveCurators">0</div>
+                    <div class="metric-label">Active Curators</div>
+                    <div class="metric-growth" id="impactCuratorsGrowth">+0% this month</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">📊</div>
+                    <div class="metric-value" id="impactKnowledgeObjects">0</div>
+                    <div class="metric-label">Knowledge Objects</div>
+                    <div class="metric-growth" id="impactKnowledgeGrowth">+0% this month</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">🏆</div>
+                    <div class="metric-value" id="impactNftsMinted">0</div>
+                    <div class="metric-label">NFTs Minted</div>
+                    <div class="metric-growth" id="impactNftsGrowth">+0% this month</div>
+                </div>
+            </div>
+        </section>
+
+
+    </main>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeToggle = document.querySelector('.theme-toggle');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                html.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Initialize theme from localStorage
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.querySelector('.theme-toggle');
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+            } else {
+                themeToggle.textContent = '🌙';
+            }
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', initializeTheme);
+
+        // Interactive functionality
+        document.querySelectorAll('.contribution-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('button')) return;
+                console.log('Opening contribution details...');
+            });
+        });
+
+        document.querySelectorAll('.share-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                alert('Share functionality would be implemented here');
+            });
+        });
+
+        // Connect wallet functionality
+        document.querySelector('.connect-wallet-btn').addEventListener('click', function() {
+            alert('Wallet connection would be implemented here');
+        });
+
+        // Community Impact dynamic metrics
+        function updateCommunityImpact() {
+            // Read contributions
+            let contributions = [];
+            try {
+                const raw = localStorage.getItem('myContributions');
+                contributions = raw ? JSON.parse(raw) : [];
+            } catch (_) {}
+
+            // Total contributions
+            const totalContrib = contributions.length;
+
+            // Active curators (placeholder: 1 if approved curator in local storage)
+            let activeCurators = 0;
+            try {
+                const curator = localStorage.getItem('curatorStatus');
+                if (curator) {
+                    const s = JSON.parse(curator);
+                    if (s.status === 'approved' || s.status === 'Approved') activeCurators = 1;
+                }
+            } catch (_) {}
+
+            // Knowledge Objects (placeholder: unique tags across contributions)
+            const tagSet = new Set();
+            contributions.forEach(c => (c.tags || []).forEach(t => tagSet.add(t)));
+            const knowledgeObjects = tagSet.size;
+
+            // NFTs Minted = approved contributions count (featured-ready)
+            const nftsMinted = contributions.filter(c => c.status === 'Approved').length;
+
+            // Growth placeholders (compute month-over-month approximations from submissionDate)
+            const now = new Date();
+            const monthAgo = new Date();
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            const contribThisMonth = contributions.filter(c => new Date(c.submissionDate) >= monthAgo).length;
+            const contribPrev = contributions.filter(c => new Date(c.submissionDate) < monthAgo && new Date(c.submissionDate) >= new Date(monthAgo.getFullYear(), monthAgo.getMonth() - 1, monthAgo.getDate())).length;
+            const calcGrowth = (curr, prev) => (prev === 0 ? (curr > 0 ? 100 : 0) : Math.round(((curr - prev) / prev) * 100));
+            const contribGrowth = calcGrowth(contribThisMonth, contribPrev);
+
+            // Apply to DOM
+            const byId = id => document.getElementById(id);
+            const setText = (id, val) => { const el = byId(id); if (el) el.textContent = String(val); };
+            setText('impactTotalContributions', totalContrib);
+            setText('impactActiveCurators', activeCurators);
+            setText('impactKnowledgeObjects', knowledgeObjects);
+            setText('impactNftsMinted', nftsMinted);
+            setText('impactContributionsGrowth', `${contribGrowth}% this month`);
+            // Placeholder growths
+            setText('impactCuratorsGrowth', '+0% this month');
+            setText('impactKnowledgeGrowth', '+0% this month');
+            setText('impactNftsGrowth', '+0% this month');
+        }
+
+        // Initialize impact metrics and listen to changes
+        document.addEventListener('DOMContentLoaded', updateCommunityImpact);
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'myContributions' || e.key === 'curatorStatus') {
+                updateCommunityImpact();
+            }
+        });
+
+        // Explore graph functionality
+        document.querySelector('.explore-btn').addEventListener('click', function() {
+            alert('Graph exploration would be implemented here');
+        });
+
+        // Mobile navigation toggle
+        const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
+        const nav = document.querySelector('.nav');
+
+        mobileNavToggle.addEventListener('click', function() {
+            nav.classList.toggle('active');
+            this.textContent = nav.classList.contains('active') ? '✕' : '☰';
+        });
+
+        // Close mobile nav when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav') && !e.target.closest('.mobile-nav-toggle')) {
+                nav.classList.remove('active');
+                mobileNavToggle.textContent = '☰';
+            }
+        });
+
+        // Close mobile nav when clicking on a nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                nav.classList.remove('active');
+                mobileNavToggle.textContent = '☰';
+            });
+        });
+
+        // Prevent zoom on double tap for mobile
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // Add touch feedback for interactive elements
+        const touchElements = document.querySelectorAll('.contribution-card, .connect-wallet-btn, .share-btn, .explore-btn');
+        
+        touchElements.forEach(element => {
+            element.addEventListener('touchstart', function() {
+                this.style.transition = 'transform 0.1s ease';
+            });
+            
+            element.addEventListener('touchend', function() {
+                this.style.transition = '';
+            });
+        });
+
+        // Optimize scroll performance on mobile
+        let ticking = false;
+        function updateScroll() {
+            // Add any scroll-based animations here
+            ticking = false;
+        }
+
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(updateScroll);
+                ticking = true;
+            }
+        }
+
+        window.addEventListener('scroll', requestTick);
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                // Recalculate any layout-dependent elements
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
+        });
+    </script>
+</body>
+</html>

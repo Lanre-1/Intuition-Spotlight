@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Intuition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            /* Light mode variables */
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --foreground: #0f172a;
+            --muted: #64748b;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --foreground: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #a855f7;
+            --primary-hover: #c084fc;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #fbbf24;
+            --error: #f87171;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background); 
+            color: var(--foreground); 
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: var(--background); 
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0; 
+            position: sticky; 
+            top: 0; 
+            z-index: 50;
+        }
+        
+        .header-container {
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 0 2rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        
+        .logo {
+            text-decoration: none; 
+            color: var(--foreground); 
+            font-weight: 600; 
+            font-size: 1.25rem;
+        }
+        
+        .nav { display: flex; gap: 2rem; }
+        
+        .nav-link {
+            color: var(--muted); 
+            text-decoration: none; 
+            font-size: 0.95rem; 
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover, .nav-link.active { color: var(--foreground); }
+        
+        .nav-link.active::after {
+            content: ''; 
+            position: absolute; 
+            bottom: -8px; 
+            left: 0; 
+            right: 0;
+            height: 2px; 
+            background: var(--primary); 
+            border-radius: 1px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--foreground);
+            font-size: 0.9rem;
+            width: 250px;
+        }
+
+        .search-box::placeholder {
+            color: var(--muted);
+        }
+
+        .connect-wallet-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .connect-wallet-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            width: 40px;
+            height: 40px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface);
+            border-color: var(--primary);
+        }
+        
+        .main { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        
+        /* Profile Header */
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .profile-avatar-upload {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .profile-avatar-upload:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+        
+        .avatar-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            overflow: hidden;
+        }
+        
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .avatar-placeholder {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .avatar-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 50%;
+        }
+        
+        .profile-avatar-upload:hover .avatar-upload-overlay {
+            opacity: 1;
+        }
+        
+        .upload-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+            color: white;
+        }
+        
+        .upload-text {
+            font-size: 0.8rem;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .avatar-file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .profile-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .profile-address {
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        .profile-bio {
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.95;
+        }
+        
+        /* Profile Stats */
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+        
+        /* Profile Sections */
+        .profile-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Contributions Grid */
+        .contributions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .contribution-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+        
+        .contribution-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .contribution-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .contribution-meta {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .contribution-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .contribution-description {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        
+        .contribution-tags {
+            margin-bottom: 1rem;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: var(--surface);
+            color: var(--muted);
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.25rem;
+            border: 1px solid var(--border);
+        }
+        
+        .status-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        /* Badges */
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .badge-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .badge-card:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+        
+        .badge-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .badge-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .badge-description {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+        
+        /* No Contributions State */
+        .no-contributions {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        
+        .no-contributions-content {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .no-contributions-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .no-contributions h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--foreground);
+        }
+        
+        .no-contributions p {
+            color: var(--muted);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        /* Settings */
+        .settings-form {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: var(--foreground);
+        }
+        
+        .form-input, .form-textarea, .form-select {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--background);
+            color: var(--foreground);
+            font-size: 0.9rem;
+        }
+        
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--surface);
+        }
+        
+        /* Wallet Info */
+        .wallet-info {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .wallet-address {
+            font-family: 'Courier New', monospace;
+            background: var(--surface);
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            word-break: break-all;
+        }
+        
+        .wallet-balance {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .wallet-balance:last-child {
+            border-bottom: none;
+        }
+        
+        .balance-label {
+            color: var(--muted);
+        }
+        
+        .balance-value {
+            font-weight: 600;
+        }
+        
+        .no-badges {
+            text-align: center;
+            padding: 2rem;
+            color: var(--muted);
+            grid-column: 1 / -1;
+        }
+        
+        /* Social Connections */
+        .social-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.1s ease, opacity 0.2s ease;
+        }
+        .social-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .social-btn.x { background: #000000; }
+        .social-btn.discord { background: #5865F2; }
+        .social-btn.github { background: #24292e; }
+        .social-btn:hover { transform: translateY(-1px); }
+        .social-status { margin-top: 1rem; color: var(--muted); font-size: 0.9rem; }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-container { padding: 0 1rem; }
+            .nav { display: none; }
+            .header-actions {
+                gap: 0.5rem;
+            }
+            .search-box {
+                width: 180px;
+                font-size: 0.8rem;
+            }
+            .theme-toggle {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            .connect-wallet-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .main { padding: 1rem; }
+            .profile-header { padding: 2rem 1rem; }
+            .profile-name { font-size: 1.5rem; }
+            .profile-avatar { width: 80px; height: 80px; font-size: 2rem; }
+            .contributions-grid { grid-template-columns: 1fr; }
+            .badges-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="homepage.html" class="logo">Intuition</a>
+            <nav class="nav">
+                <a href="homepage.html" class="nav-link">Home</a>
+                <a href="submit.html" class="nav-link">Submit</a>
+                <a href="curate.html" class="nav-link">Curate</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <a href="featured.html" class="nav-link">Featured</a>
+                <a href="profile.html" class="nav-link active">Profile</a>
+            </nav>
+            <div class="header-actions">
+                <input type="text" class="search-box" placeholder="Search">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+                <button class="connect-wallet-btn">🔗 Connect Wallet</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-avatar-upload" id="avatarUpload">
+                <div class="avatar-preview" id="avatarPreview">
+                    <div class="avatar-placeholder">👤</div>
+                </div>
+                <div class="avatar-upload-overlay">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Click to upload</div>
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" class="avatar-file-input">
+            </div>
+            <h1 class="profile-name">Sunless</h1>
+            <div class="profile-address">0x1234...5678</div>
+            <p class="profile-bio">
+                Web3 developer and researcher passionate about preserving technologies. 
+                Contributing to the future of decentralized knowledge curation.
+            </p>
+        </div>
+
+        <!-- Profile Stats -->
+        <div class="profile-stats">
+            <div class="stat-card">
+                <div class="stat-value">24</div>
+                <div class="stat-label">Contributions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">156</div>
+                <div class="stat-label">Total Votes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">89%</div>
+                <div class="stat-label">Approval Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Badges Earned</div>
+            </div>
+        </div>
+
+        <!-- My Contributions -->
+        <div class="profile-section">
+            <h2 class="section-title">📝 My Contributions</h2>
+            <div class="contributions-grid" id="myContributionsGrid">
+                <!-- Contributions will be dynamically loaded here -->
+            </div>
+            <div class="no-contributions" id="noContributions" style="display: none;">
+                <div class="no-contributions-content">
+                    <div class="no-contributions-icon">📝</div>
+                    <h3>No contributions yet</h3>
+                    <p>Start sharing your knowledge by submitting your first contribution!</p>
+                    <a href="submit.html" class="btn btn-primary">Submit Contribution</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Badges -->
+        <div class="profile-section">
+            <h2 class="section-title">🏆 Badges & Achievements</h2>
+            <div class="badges-grid">
+                <div class="badge-card">
+                    <div class="badge-icon">⭐</div>
+                    <div class="badge-name">First Contribution</div>
+                    <div class="badge-description">Made your first contribution to the platform</div>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">🔥</div>
+                    <div class="badge-name">Trending Creator</div>
+                    <div class="badge-description">Had a contribution reach trending status</div>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">🎯</div>
+                    <div class="badge-name">Quality Curator</div>
+                    <div class="badge-description">Curated 50+ contributions with high accuracy</div>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">🚀</div>
+                    <div class="badge-name">Early Adopter</div>
+                    <div class="badge-description">Joined the platform in its first month</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet Information -->
+        <div class="profile-section">
+            <h2 class="section-title">💼 Wallet Information</h2>
+            <div class="wallet-info">
+                <div class="wallet-address">0x1234567890abcdef1234567890abcdef12345678</div>
+                <div class="wallet-balance">
+                    <span class="balance-label">ETH Balance</span>
+                    <span class="balance-value">3.25 ETH</span>
+                </div>
+                <div class="wallet-balance">
+                    <span class="balance-label">TRUST Balance</span>
+                    <span class="balance-value">800 TRUST</span>
+                </div>
+                <div class="wallet-balance">
+                    <span class="balance-label">NFTs Owned</span>
+                    <span class="balance-value">8 NFTs</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connect Socials -->
+        <div class="profile-section">
+            <h2 class="section-title">🔗 Connect Socials</h2>
+            <div class="social-buttons">
+                <button class="social-btn x" onclick="connectX()">Connect X</button>
+                <button class="social-btn discord" onclick="connectDiscord()">Connect Discord</button>
+                <button class="social-btn github" onclick="connectGitHub()">Connect GitHub</button>
+            </div>
+            <div class="social-status" id="socialStatus"></div>
+        </div>
+
+        <!-- Profile Settings -->
+        <div class="profile-section">
+            <h2 class="section-title">⚙️ Profile Settings</h2>
+            <form class="settings-form">
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" class="form-input" value="Alex Chen" placeholder="Enter your display name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bio</label>
+                    <textarea class="form-textarea" placeholder="Tell us about yourself">Web3 developer and researcher passionate about privacy-preserving technologies. Contributing to the future of decentralized knowledge curation.</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" value="alex@example.com" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Website</label>
+                    <input type="url" class="form-input" value="https://alexchen.dev" placeholder="Enter your website URL">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expertise Areas</label>
+                    <select class="form-select" multiple>
+                        <option value="privacy" selected>Privacy Technologies</option>
+                        <option value="machine-learning" selected>Machine Learning</option>
+                        <option value="cryptography">Cryptography</option>
+                        <option value="web3">Web3 Development</option>
+                        <option value="defi">DeFi</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary">Reset</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeToggle = document.querySelector('.theme-toggle');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                html.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Initialize theme from localStorage
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.querySelector('.theme-toggle');
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+            } else {
+                themeToggle.textContent = '🌙';
+            }
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            loadProfileData();
+            setupRealTimeUpdates();
+        });
+
+        // Profile data management
+        let profileData = {
+            displayName: 'Sunless',
+            bio: 'Web3 developer and researcher passionate about privacy-preserving technologies. Contributing to the future of decentralized knowledge curation.',
+            email: 'alex@example.com',
+            website: 'https://alexchen.dev',
+            expertiseAreas: ['privacy', 'machine-learning']
+        };
+
+        // Load profile data from localStorage on page load
+        function loadProfileData() {
+            try {
+                const savedData = localStorage.getItem('profileData');
+                if (savedData) {
+                    profileData = { ...profileData, ...JSON.parse(savedData) };
+                }
+                updateProfileDisplay();
+                updateFormFields();
+            } catch (e) {
+                console.warn('Could not load profile data from localStorage:', e);
+            }
+        }
+
+        // Update profile display with current data
+        function updateProfileDisplay() {
+            // Update profile name
+            const profileName = document.querySelector('.profile-name');
+            if (profileName) {
+                profileName.textContent = profileData.displayName;
+            }
+
+            // Update profile bio
+            const profileBio = document.querySelector('.profile-bio');
+            if (profileBio) {
+                profileBio.textContent = profileData.bio;
+            }
+        }
+
+        // Update form fields with current profile data
+        function updateFormFields() {
+            const form = document.querySelector('.settings-form');
+            if (form) {
+                // Update display name
+                const displayNameInput = form.querySelector('input[placeholder="Enter your display name"]');
+                if (displayNameInput) {
+                    displayNameInput.value = profileData.displayName;
+                }
+
+                // Update bio
+                const bioTextarea = form.querySelector('textarea[placeholder="Tell us about yourself"]');
+                if (bioTextarea) {
+                    bioTextarea.value = profileData.bio;
+                }
+
+                // Update email
+                const emailInput = form.querySelector('input[type="email"]');
+                if (emailInput) {
+                    emailInput.value = profileData.email;
+                }
+
+                // Update website
+                const websiteInput = form.querySelector('input[type="url"]');
+                if (websiteInput) {
+                    websiteInput.value = profileData.website;
+                }
+
+                // Update expertise areas
+                const expertiseSelect = form.querySelector('select[multiple]');
+                if (expertiseSelect) {
+                    Array.from(expertiseSelect.options).forEach(option => {
+                        option.selected = profileData.expertiseAreas.includes(option.value);
+                    });
+                }
+            }
+        }
+
+        // Save profile data to localStorage
+        function saveProfileData() {
+            try {
+                localStorage.setItem('profileData', JSON.stringify(profileData));
+            } catch (e) {
+                console.warn('Could not save profile data to localStorage:', e);
+            }
+        }
+
+        // Form submission handling
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            
+            // Update profile data from form
+            profileData.displayName = form.querySelector('input[placeholder="Enter your display name"]').value;
+            profileData.bio = form.querySelector('textarea[placeholder="Tell us about yourself"]').value;
+            profileData.email = form.querySelector('input[type="email"]').value;
+            profileData.website = form.querySelector('input[type="url"]').value;
+            
+            // Update expertise areas
+            const expertiseSelect = form.querySelector('select[multiple]');
+            profileData.expertiseAreas = Array.from(expertiseSelect.selectedOptions).map(option => option.value);
+            
+            // Save to localStorage
+            saveProfileData();
+            
+            // Update profile display
+            updateProfileDisplay();
+            
+            // Show success message
+            alert('Profile updated successfully!');
+        });
+
+        // Reset form
+        document.querySelector('.btn-secondary').addEventListener('click', function() {
+            if (confirm('Are you sure you want to reset all changes?')) {
+                // Reset to saved profile data
+                updateFormFields();
+                alert('Form reset to last saved values.');
+            }
+        });
+
+        // Real-time updates as user types (optional enhancement)
+        function setupRealTimeUpdates() {
+            const form = document.querySelector('.settings-form');
+            if (form) {
+                // Update display name in real-time
+                const displayNameInput = form.querySelector('input[placeholder="Enter your display name"]');
+                if (displayNameInput) {
+                    displayNameInput.addEventListener('input', function() {
+                        const profileName = document.querySelector('.profile-name');
+                        if (profileName) {
+                            profileName.textContent = this.value || 'Sunless';
+                        }
+                    });
+                }
+
+                // Update bio in real-time
+                const bioTextarea = form.querySelector('textarea[placeholder="Tell us about yourself"]');
+                if (bioTextarea) {
+                    bioTextarea.addEventListener('input', function() {
+                        const profileBio = document.querySelector('.profile-bio');
+                        if (profileBio) {
+                            profileBio.textContent = this.value || 'Web3 developer and researcher passionate about privacy-preserving technologies. Contributing to the future of decentralized knowledge curation.';
+                        }
+                    });
+                }
+            }
+        }
+
+        // Avatar Upload Functionality
+        let currentAvatar = null;
+
+        // Initialize avatar upload functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAvatarUpload();
+        });
+
+        function initializeAvatarUpload() {
+            const avatarUpload = document.getElementById('avatarUpload');
+            const avatarInput = document.getElementById('avatarInput');
+            const avatarPreview = document.getElementById('avatarPreview');
+
+            // Click to upload
+            avatarUpload.addEventListener('click', () => avatarInput.click());
+
+            // File input change
+            avatarInput.addEventListener('change', handleAvatarSelect);
+        }
+
+        function handleAvatarSelect(e) {
+            const file = e.target.files[0];
+            if (file && validateAvatarFile(file)) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    displayAvatar(e.target.result);
+                    currentAvatar = file;
+                    saveAvatarToLocalStorage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function validateAvatarFile(file) {
+            const maxSize = 5 * 1024 * 1024; // 5MB limit
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+            if (file.size > maxSize) {
+                alert('Avatar image is too large. Maximum size is 5MB.');
+                return false;
+            }
+
+            if (!allowedTypes.includes(file.type)) {
+                alert('Please select a valid image file (JPEG, PNG, GIF, or WebP).');
+                return false;
+            }
+
+            return true;
+        }
+
+        function displayAvatar(imageSrc) {
+            const avatarPreview = document.getElementById('avatarPreview');
+            const avatarPlaceholder = avatarPreview.querySelector('.avatar-placeholder');
+            
+            // Remove placeholder
+            if (avatarPlaceholder) {
+                avatarPlaceholder.remove();
+            }
+            
+            // Create and display image
+            const img = document.createElement('img');
+            img.src = imageSrc;
+            img.alt = 'Profile Avatar';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '50%';
+            
+            avatarPreview.appendChild(img);
+        }
+
+        function saveAvatarToLocalStorage(imageSrc) {
+            try {
+                localStorage.setItem('profileAvatar', imageSrc);
+            } catch (e) {
+                console.warn('Could not save avatar to localStorage:', e);
+            }
+        }
+
+        function loadAvatarFromLocalStorage() {
+            try {
+                const savedAvatar = localStorage.getItem('profileAvatar');
+                if (savedAvatar) {
+                    displayAvatar(savedAvatar);
+                    currentAvatar = savedAvatar;
+                }
+            } catch (e) {
+                console.warn('Could not load avatar from localStorage:', e);
+            }
+        }
+
+        // Load saved avatar on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAvatarFromLocalStorage();
+            loadMyContributions();
+            initializeConnectWallet();
+            updateProfileStats();
+        });
+
+        // My Contributions Management
+        function loadMyContributions() {
+            try {
+                const savedContributions = localStorage.getItem('myContributions');
+                if (savedContributions) {
+                    const contributions = JSON.parse(savedContributions);
+                    displayMyContributions(contributions);
+                } else {
+                    showNoContributions();
+                }
+            } catch (e) {
+                console.warn('Could not load contributions from localStorage:', e);
+                showNoContributions();
+            }
+        }
+
+        function displayMyContributions(contributions) {
+            const grid = document.getElementById('myContributionsGrid');
+            const noContributions = document.getElementById('noContributions');
+            
+            if (contributions.length === 0) {
+                showNoContributions();
+                return;
+            }
+
+            // Hide no contributions message
+            noContributions.style.display = 'none';
+            
+            // Clear existing content
+            grid.innerHTML = '';
+            
+            // Sort contributions by submission date (newest first)
+            contributions.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate));
+            
+            // Display each contribution
+            contributions.forEach(contribution => {
+                const contributionCard = createContributionCard(contribution);
+                grid.appendChild(contributionCard);
+            });
+        }
+
+        function createContributionCard(contribution) {
+            const card = document.createElement('div');
+            card.className = 'contribution-card';
+            
+            const status = getContributionStatus(contribution);
+            const timeAgo = getTimeAgo(contribution.submissionDate);
+            
+            card.innerHTML = `
+                <h3 class="contribution-title">${contribution.title}</h3>
+                <div class="contribution-meta">${contribution.contentType} • ${timeAgo} • ${contribution.votes || 0} votes</div>
+                <p class="contribution-description">${contribution.description}</p>
+                <div class="contribution-tags">
+                    ${contribution.tags ? contribution.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+                </div>
+                <span class="contribution-status status-${status.toLowerCase()}">${status}</span>
+            `;
+            
+            return card;
+        }
+
+        function getContributionStatus(contribution) {
+            // For now, all contributions start as "Pending Review"
+            // In a real app, this would come from the backend
+            return 'Pending Review';
+        }
+
+        function getTimeAgo(dateString) {
+            const now = new Date();
+            const submissionDate = new Date(dateString);
+            const diffInMs = now - submissionDate;
+            const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+            const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+            const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+
+            if (diffInDays > 0) {
+                return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`;
+            } else if (diffInHours > 0) {
+                return diffInHours === 1 ? '1 hour ago' : `${diffInHours} hours ago`;
+            } else if (diffInMinutes > 0) {
+                return diffInMinutes === 1 ? '1 minute ago' : `${diffInMinutes} minutes ago`;
+            } else {
+                return 'Just now';
+            }
+        }
+
+        function showNoContributions() {
+            const grid = document.getElementById('myContributionsGrid');
+            const noContributions = document.getElementById('noContributions');
+            
+            grid.style.display = 'none';
+            noContributions.style.display = 'block';
+        }
+
+        // Listen for new contributions from submit page
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'myContributions') {
+                try {
+                    const contributions = JSON.parse(e.newValue || '[]');
+                    displayMyContributions(contributions);
+                } catch (error) {
+                    console.warn('Error parsing contributions:', error);
+                }
+            }
+        });
+
+        // Function to add a new contribution (called from submit page)
+        function addNewContribution(contribution) {
+            try {
+                const existingContributions = JSON.parse(localStorage.getItem('myContributions') || '[]');
+                const newContribution = {
+                    ...contribution,
+                    id: Date.now(),
+                    submissionDate: new Date().toISOString(),
+                    votes: 0,
+                    status: 'Pending Review'
+                };
+                
+                existingContributions.unshift(newContribution);
+                localStorage.setItem('myContributions', JSON.stringify(existingContributions));
+                
+                // Update display
+                displayMyContributions(existingContributions);
+                
+                return true;
+            } catch (e) {
+                console.error('Error adding contribution:', e);
+                return false;
+            }
+        }
+
+        // Connect Wallet Functionality
+        function initializeConnectWallet() {
+            const connectWalletBtn = document.querySelector('.connect-wallet-btn');
+            if (connectWalletBtn) {
+                connectWalletBtn.addEventListener('click', function() {
+                    alert('Wallet connection would be implemented here');
+                });
+            }
+        }
+
+        // Dynamic Profile Stats System
+        function updateProfileStats() {
+            const contributions = JSON.parse(localStorage.getItem('myContributions') || '[]');
+            const badges = calculateBadges(contributions);
+            
+            // Update stats display
+            updateStatValue('contributions', contributions.length);
+            updateStatValue('votes', calculateTotalVotes(contributions));
+            updateStatValue('approvalRate', calculateApprovalRate(contributions));
+            updateStatValue('badges', badges.length);
+            
+            // Update badges display
+            updateBadgesDisplay(badges);
+        }
+
+        function updateStatValue(statType, value) {
+            const statElements = {
+                'contributions': document.querySelector('.stat-card:nth-child(1) .stat-value'),
+                'votes': document.querySelector('.stat-card:nth-child(2) .stat-value'),
+                'approvalRate': document.querySelector('.stat-card:nth-child(3) .stat-value'),
+                'badges': document.querySelector('.stat-card:nth-child(4) .stat-value')
+            };
+            
+            if (statElements[statType]) {
+                statElements[statType].textContent = value;
+            }
+        }
+
+        function calculateTotalVotes(contributions) {
+            return contributions.reduce((total, contribution) => total + (contribution.votes || 0), 0);
+        }
+
+        function calculateApprovalRate(contributions) {
+            if (contributions.length === 0) return '0%';
+            
+            const approved = contributions.filter(c => c.status === 'Approved').length;
+            const rate = Math.round((approved / contributions.length) * 100);
+            return `${rate}%`;
+        }
+
+        function calculateBadges(contributions) {
+            const badges = [];
+            
+            // First Contribution Badge
+            if (contributions.length > 0) {
+                badges.push({
+                    icon: '⭐',
+                    name: 'First Contribution',
+                    description: 'Made your first contribution to the platform'
+                });
+            }
+            
+            // Quality Contributor Badge (5+ approved contributions)
+            const approvedContributions = contributions.filter(c => c.status === 'Approved');
+            if (approvedContributions.length >= 5) {
+                badges.push({
+                    icon: '🔥',
+                    name: 'Quality Contributor',
+                    description: 'Had 5+ contributions approved by curators'
+                });
+            }
+            
+            // Popular Content Badge (100+ total votes)
+            const totalVotes = calculateTotalVotes(contributions);
+            if (totalVotes >= 100) {
+                badges.push({
+                    icon: '🎯',
+                    name: 'Popular Creator',
+                    description: 'Received 100+ total votes on contributions'
+                });
+            }
+            
+            // Consistent Contributor Badge (3+ contributions in a month)
+            const oneMonthAgo = new Date();
+            oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+            const recentContributions = contributions.filter(c => new Date(c.submissionDate) > oneMonthAgo);
+            if (recentContributions.length >= 3) {
+                badges.push({
+                    icon: '🚀',
+                    name: 'Consistent Contributor',
+                    description: 'Submitted 3+ contributions in the last month'
+                });
+            }
+            
+            return badges;
+        }
+
+        function updateBadgesDisplay(badges) {
+            const badgesGrid = document.querySelector('.badges-grid');
+            if (badgesGrid) {
+                badgesGrid.innerHTML = '';
+                
+                badges.forEach(badge => {
+                    const badgeCard = document.createElement('div');
+                    badgeCard.className = 'badge-card';
+                    badgeCard.innerHTML = `
+                        <div class="badge-icon">${badge.icon}</div>
+                        <div class="badge-name">${badge.name}</div>
+                        <div class="badge-description">${badge.description}</div>
+                    `;
+                    badgesGrid.appendChild(badgeCard);
+                });
+                
+                // Show message if no badges
+                if (badges.length === 0) {
+                    badgesGrid.innerHTML = `
+                        <div class="no-badges">
+                            <p>No badges earned yet. Start contributing to earn badges!</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Listen for contribution status updates
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'myContributions') {
+                try {
+                    const contributions = JSON.parse(e.newValue || '[]');
+                    displayMyContributions(contributions);
+                    updateProfileStats(); // Update stats when contributions change
+                } catch (error) {
+                    console.warn('Error parsing contributions:', error);
+                }
+            }
+        });
+
+        // Function to update contribution status (called by curators)
+        function updateContributionStatus(contributionId, newStatus) {
+            try {
+                const contributions = JSON.parse(localStorage.getItem('myContributions') || '[]');
+                const updatedContributions = contributions.map(contribution => {
+                    if (contribution.id === contributionId) {
+                        return { ...contribution, status: newStatus };
+                    }
+                    return contribution;
+                });
+                
+                localStorage.setItem('myContributions', JSON.stringify(updatedContributions));
+                displayMyContributions(updatedContributions);
+                updateProfileStats();
+                
+                return true;
+            } catch (e) {
+                console.error('Error updating contribution status:', e);
+                return false;
+            }
+        }
+
+        // Social connections (placeholder flows to provider auth URLs)
+        function setSocialStatus(text) {
+            const el = document.getElementById('socialStatus');
+            if (el) el.textContent = text;
+        }
+
+        function connectX() {
+            // Placeholder: redirect to X(Twitter) OAuth 2.0 authorize endpoint
+            // In production, point to your backend which initiates OAuth and redirects back
+            setSocialStatus('Redirecting to X for authentication...');
+            const clientId = 'YOUR_X_CLIENT_ID';
+            const redirectUri = encodeURIComponent(window.location.origin + '/auth/x/callback');
+            const scope = encodeURIComponent('tweet.read users.read offline.access');
+            const state = encodeURIComponent(Math.random().toString(36).slice(2));
+            const url = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&code_challenge=challenge&code_challenge_method=plain`;
+            window.location.href = url;
+        }
+
+        function connectDiscord() {
+            setSocialStatus('Redirecting to Discord for authentication...');
+            const clientId = 'YOUR_DISCORD_CLIENT_ID';
+            const redirectUri = encodeURIComponent(window.location.origin + '/auth/discord/callback');
+            const scope = encodeURIComponent('identify guilds email');
+            const responseType = 'code';
+            const url = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`;
+            window.location.href = url;
+        }
+
+        function connectGitHub() {
+            setSocialStatus('Redirecting to GitHub for authentication...');
+            const clientId = 'YOUR_GITHUB_CLIENT_ID';
+            const redirectUri = encodeURIComponent(window.location.origin + '/auth/github/callback');
+            const scope = encodeURIComponent('read:user user:email');
+            const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>
